@@ -1,0 +1,494 @@
+-- =========================================================================
+-- Copyright (c) 2010-2016 Hewlett-Packard Development Company, L.P.
+--
+-- Description: This file describes common MIB objects implemented by both
+--              Routers and Switches.
+-- Reference:
+-- Version: V2.8
+-- History:
+-- V1.0 2004-6-30 Created by MIB Standard Group
+-- V1.1 16th Aug 2004
+--      Added the trap node 'hpnicfRebootSendTrap' into hpnicfSystemNotification
+-- V2.0 2004-10-12 updated by gaolong
+--      Imported from SNMPv2-SMI and SNMPv2-TC instead of RFC1212 and RFC1155-SMI
+--      Changed ACCESS clauses to MAX-ACCESS
+--      Changed STATUS clauses from mandatory to current
+-- V2.1 2008-11-11 added node hpnicfSysBootType by lifengguang
+-- V2.2 2009-05-05 added hpnicfSysStatisticPeriod, hpnicfSysSamplePeriod,
+--      hpnicfSysTrapResendPeriod, hpnicfSysTrapCollectionPeriod, hpnicfSysColdStartTrap,
+--      hpnicfSysWarmStartTrap, hpnicfSysSnmpPort, hpnicfSysSnmpTrapPort, hpnicfSysNetID,
+--      hpnicfSysLastSampleTime by jinyi
+-- V2.3 2012-01-07 added node hpnicfSysTrapSendNum and hpnicfSysFirstTrapTime by duyanbing
+-- V2.4 2012-06-06 added node hpnicfSysBannerMOTD by jixugang
+-- V2.5 2013-05-28 added trap node hpnicfSysLoghostUnreachableTrap by duyanbing
+-- V2.6 2013-09-13 added normal(0) to node hpnicfReboot by duyanbing
+-- V2.7 2014-08-07 added hpnicfSystemDiagInfoTable by SongHao
+--      2015-03-25 Added the trap node hpnicfSysDyingGaspTrap into hpnicfSystemNotification
+--      by gaoyanping
+-- V2.8 2015-05-05 added hpnicfSystemWorkingMode, hpnicfSystemWorkingModeTable,
+--      hpnicfSystemWorkingModeDefault, hpnicfSystemWorkingModeCurrent,
+--      hpnicfSystemWorkingModeNext by lifuxia
+-- =========================================================================
+HPN-ICF-COMMON-SYSTEM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, TimeTicks, Integer32
+        FROM SNMPv2-SMI
+    DisplayString, DateAndTime, TimeStamp, RowStatus
+        FROM SNMPv2-TC
+    InetAddressType, InetAddress
+        FROM INET-ADDRESS-MIB
+    hpnicf
+        FROM HPN-ICF-OID-MIB;
+
+hpnicfSystem MODULE-IDENTITY
+    LAST-UPDATED "201505050000Z"
+    ORGANIZATION
+        ""
+    CONTACT-INFO
+        ""
+    DESCRIPTION
+        "This file describes common MIB objects implemented by
+        both Routers and Switches."
+    REVISION     "201505050000Z"
+    DESCRIPTION  "Added hpnicfSystemWorkingMode, hpnicfSystemWorkingModeTable,
+                  hpnicfSystemWorkingModeDefault, hpnicfSystemWorkingModeCurrent,
+                  hpnicfSystemWorkingModeNext."
+    REVISION     "201503250000Z"
+    DESCRIPTION  "Added the trap node hpnicfSysDyingGaspTrap into hpnicfSystemNotification."
+    REVISION     "201408071710Z"
+    DESCRIPTION  "Added hpnicfSystemDiagInfoTable."
+    REVISION     "201309130000Z"
+    DESCRIPTION  "Added normal(0) to node hpnicfReboot."
+    REVISION     "201305280000Z"
+    DESCRIPTION  "Added trap node hpnicfSysLoghostUnreachableTrap."
+    REVISION     "201206060000Z"
+    DESCRIPTION  "Added node hpnicfSysBannerMOTD."
+    REVISION     "201201070000Z"
+    DESCRIPTION  "Added node hpnicfSysTrapSendNum and hpnicfSysFirstTrapTime."
+    REVISION     "200905050000Z"
+    DESCRIPTION  "Added hpnicfSysStatisticPeriod, hpnicfSysSamplePeriod,
+                  hpnicfSysTrapResendPeriod, hpnicfSysTrapCollectionPeriod,
+                  hpnicfSysColdStartTrap, hpnicfSysWarmStartTrap, hpnicfSysSnmpPort,
+                  hpnicfSysSnmpTrapPort, hpnicfSysNetID, hpnicfSysLastSampleTime."
+    REVISION     "200811110000Z"
+    DESCRIPTION  "added node hpnicfSysBootType."
+    REVISION     "200410120000Z"
+    DESCRIPTION  "Imported from SNMPv2-SMI and SNMPv2-TC instead of
+                  RFC1212 and RFC1155-SMI.
+                  Changed ACCESS clauses to MAX-ACCESS.
+                  Changed STATUS clauses from mandatory to current."
+    REVISION     "200408160000Z"
+    DESCRIPTION  "Added the trap node 'hpnicfRebootSendTrap' into hpnicfSystemNotification."
+    REVISION     "200406300000Z"
+    DESCRIPTION  "Initial revision of this MIB module."
+    ::= { hpnicf 6 }
+
+-- ==============================
+-- Begin define of hpnicfmHostName
+-- ==============================
+
+    hpnicfWriteConfig OBJECT-TYPE
+        SYNTAX INTEGER{
+                       save(1)
+                      }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Write config to router."
+        ::= { hpnicfSystem 5 }
+
+    hpnicfStartFtpServer OBJECT-TYPE
+        SYNTAX INTEGER{
+                       enable(1),
+                       disable(2)
+                       }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Decide whether start ftp-server.enable(1) indicates to start ftp-server;
+            disable(2) indicates to stop ftp-server."
+        ::= { hpnicfSystem 6 }
+
+    hpnicfReboot OBJECT-TYPE
+        SYNTAX INTEGER{
+                       normal(0),
+                       reboot(1)
+                       }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "normal: do nothing.
+            reboot: reboot the device.
+            'normal' will be returned when getting."
+        ::= { hpnicfSystem 7 }
+
+    hpnicfSystemNotification OBJECT IDENTIFIER ::= { hpnicfSystem 8 }
+
+    hpnicfWriteSuccessTrap NOTIFICATION-TYPE
+        STATUS current
+        DESCRIPTION
+            "Send a trap about write success."
+        ::= { hpnicfSystemNotification 1 }
+
+    hpnicfWriteFailureTrap NOTIFICATION-TYPE
+        STATUS current
+        DESCRIPTION
+            "Send a trap about write failure."
+        ::= { hpnicfSystemNotification 2 }
+
+    hpnicfRebootSendTrap NOTIFICATION-TYPE
+        STATUS current
+        DESCRIPTION
+            "If a user restarts the device with command
+            'reboot', this trap will be sent two seconds
+             before the device reboots."
+        ::= { hpnicfSystemNotification 3 }
+
+    hpnicfSysColdStartTrap NOTIFICATION-TYPE
+        OBJECTS
+            {
+                hpnicfSysFirstTrapTime
+            }
+        STATUS current
+        DESCRIPTION
+            "System cold start trap."
+        ::= { hpnicfSystemNotification 4 }
+
+    hpnicfSysWarmStartTrap NOTIFICATION-TYPE
+        OBJECTS
+            {
+                hpnicfSysFirstTrapTime
+            }
+        STATUS current
+        DESCRIPTION
+            "System warm start trap."
+        ::= { hpnicfSystemNotification 5 }
+
+    hpnicfSysLoghostUnreachableTrap NOTIFICATION-TYPE
+        OBJECTS
+        {
+            hpnicfSysLoghostIndex,
+            hpnicfSysLoghostIpaddressType,
+            hpnicfSysLoghostIpaddress,
+            hpnicfSysLoghostTrapVpnName
+        }
+        STATUS      current
+        DESCRIPTION
+            "This notification will be sent when a loghost becomes unreachable."
+        ::= { hpnicfSystemNotification 6}
+
+    hpnicfSysDyingGaspTrap NOTIFICATION-TYPE
+        STATUS      current
+        DESCRIPTION
+            "This notification will be sent upon loss of power."
+        ::= { hpnicfSystemNotification 7}
+
+    hpnicfSoftwareVersion OBJECT-TYPE
+        SYNTAX DisplayString
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "Software version."
+        ::= { hpnicfSystem 9 }
+
+    hpnicfSysBootType OBJECT-TYPE
+        SYNTAX INTEGER
+        {
+            coldStart(1),           -- Cold start
+            warmStart(2)            -- Warm start
+        }
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "Boot type of the system, indicates whether the last device reboot was by
+            CLI (warm start) or power off (cold start)."
+        ::= { hpnicfSystem 10 }
+
+    hpnicfSystemInfo OBJECT IDENTIFIER ::= { hpnicfSystem 11 }
+
+    hpnicfSysStatisticPeriod OBJECT-TYPE
+        SYNTAX      Integer32(0..900)
+        UNITS       "seconds"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Statistic period.  The device collects statistics
+             within the period."
+        DEFVAL { 0 }
+        ::= { hpnicfSystemInfo 1 }
+
+    hpnicfSysSamplePeriod OBJECT-TYPE
+        SYNTAX      Integer32(0..300)
+        UNITS       "seconds"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Sampling period.  The device takes samples periodically
+             for statistics collection."
+        DEFVAL { 0 }
+        ::= { hpnicfSystemInfo 2 }
+
+    hpnicfSysTrapResendPeriod OBJECT-TYPE
+        SYNTAX      Integer32(0..3600)
+        UNITS       "seconds"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Trap resending period.  If the value is zero, the trap
+             will not be re-sent."
+        DEFVAL { 0 }
+        ::= { hpnicfSystemInfo 3 }
+
+    hpnicfSysTrapCollectionPeriod OBJECT-TYPE
+        SYNTAX      Integer32(0..60)
+        UNITS       "seconds"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Trap collecting period.  If the value is zero, the trap
+             will not be re-sent."
+        DEFVAL { 0 }
+        ::= { hpnicfSystemInfo 4 }
+
+    hpnicfSysSnmpPort OBJECT-TYPE
+        SYNTAX      Integer32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "UDP port for SNMP protocol entity to receive messages except Trap-PDU."
+        ::= { hpnicfSystemInfo 5 }
+
+    hpnicfSysSnmpTrapPort OBJECT-TYPE
+        SYNTAX      Integer32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "UDP port for Trap-PDU to receive messages."
+        ::= { hpnicfSystemInfo 6 }
+
+    hpnicfSysNetID OBJECT-TYPE
+        SYNTAX      OCTET STRING(SIZE(0..127))
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "System Net ID."
+        ::= { hpnicfSystemInfo 7 }
+
+    hpnicfSysLastSampleTime OBJECT-TYPE
+        SYNTAX      DateAndTime
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Last sampling time of the system."
+        ::= { hpnicfSystemInfo 8 }
+
+    hpnicfSysTrapSendNum OBJECT-TYPE
+        SYNTAX      Integer32(0..24)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Maximum number of times for sending a trap.  If the value is zero,
+            a trap will be sent at an interval continually."
+        ::= { hpnicfSystemInfo 9 }
+
+    hpnicfSysFirstTrapTime OBJECT-TYPE
+        SYNTAX      TimeTicks
+        MAX-ACCESS  accessible-for-notify
+        STATUS      current
+        DESCRIPTION
+            "Time when the first trap is sent."
+        ::= { hpnicfSystemInfo 10 }
+
+    hpnicfSysBannerMOTD OBJECT-TYPE
+        SYNTAX OCTET STRING (SIZE (0..2000))
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "An administratively configured message that is displayed
+             to the user when the user logs in to the device through
+             the console port or Web interface."
+        ::= { hpnicfSystemInfo 11 }
+
+    hpnicfSystemNotificationInfo OBJECT IDENTIFIER ::= { hpnicfSystem 12 }
+
+    hpnicfSysLoghostIndex OBJECT-TYPE
+        SYNTAX Integer32
+        MAX-ACCESS accessible-for-notify
+        STATUS current
+        DESCRIPTION
+            "Index of loghost."
+        ::= { hpnicfSystemNotificationInfo 1 }
+
+    hpnicfSysLoghostIpaddressType OBJECT-TYPE
+        SYNTAX InetAddressType
+        MAX-ACCESS accessible-for-notify
+        STATUS current
+        DESCRIPTION
+            "IP address type of the loghost."
+        ::= { hpnicfSystemNotificationInfo 2 }
+
+    hpnicfSysLoghostIpaddress OBJECT-TYPE
+        SYNTAX InetAddress
+        MAX-ACCESS accessible-for-notify
+        STATUS current
+        DESCRIPTION
+            "IP address of the loghost."
+        ::= { hpnicfSystemNotificationInfo 3 }
+
+    hpnicfSysLoghostTrapVpnName OBJECT-TYPE
+        SYNTAX      DisplayString(SIZE(0..31))
+        MAX-ACCESS  accessible-for-notify
+        STATUS      current
+        DESCRIPTION
+            "VPN name of the loghost."
+        ::= { hpnicfSystemNotificationInfo 4 }
+
+-- hpnicfSystemDiagInfoTable
+    hpnicfSystemDiagInfoTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF HpnicfSystemDiagInfoEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "This table is used to write diagnosis-information file."
+        ::= { hpnicfSystem 13 }
+    hpnicfSystemDiagInfoEntry OBJECT-TYPE
+        SYNTAX          HpnicfSystemDiagInfoEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "The entry of hpnicfSystemDiagInfoTable.
+                        The maximum number of entries of this table is 10.
+                        When creating a new entry if there are already
+                        10 entries in this table, the oldest entry will be
+                        deleted automatically."
+        INDEX { hpnicfSystemDiagInfoIndex }
+        ::= { hpnicfSystemDiagInfoTable 1 }
+    HpnicfSystemDiagInfoEntry ::= SEQUENCE {
+        hpnicfSystemDiagInfoIndex             Integer32,
+        hpnicfSystemDiagInfoFilename          DisplayString,
+        hpnicfSystemDiagInfoRowStatus         RowStatus,
+        hpnicfSystemDiagInfoOperEndTime       TimeStamp,
+        hpnicfSystemDiagInfoOperState         INTEGER,
+        hpnicfSystemDiagInfoOperFailReason    DisplayString
+     }
+    hpnicfSystemDiagInfoIndex OBJECT-TYPE
+        SYNTAX          Integer32 (1..2147483647)
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "Specifies the index of an entry."
+        ::= { hpnicfSystemDiagInfoEntry 1 }
+    hpnicfSystemDiagInfoFilename OBJECT-TYPE
+        SYNTAX          DisplayString (SIZE (0..255))
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION     "Specifies the name of diagnosis-information file.
+                        When creating a row without this column, the system
+                        will generate a default filename instead."
+        ::= { hpnicfSystemDiagInfoEntry 2 }
+    hpnicfSystemDiagInfoRowStatus OBJECT-TYPE
+        SYNTAX          RowStatus
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION     "The row status of this entry.
+                        Only active, createAndGo, and destroy are supported."
+        ::= { hpnicfSystemDiagInfoEntry 3 }
+    hpnicfSystemDiagInfoOperEndTime OBJECT-TYPE
+        SYNTAX          TimeStamp
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The time when this operation was completed."
+        ::= { hpnicfSystemDiagInfoEntry 4 }
+    hpnicfSystemDiagInfoOperState OBJECT-TYPE
+        SYNTAX          INTEGER
+                        {
+                            opInProgress(1),
+                            opSuccess(2),
+                            opFailure(3)
+                        }
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The state of this operation.
+                        If the state of this operation is opFailure, the detailed
+                        information can be read by hpnicfSystemDiagInfoOperFailReason."
+        ::= { hpnicfSystemDiagInfoEntry 5 }
+    hpnicfSystemDiagInfoOperFailReason OBJECT-TYPE
+        SYNTAX          DisplayString (SIZE (0..255))
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The failure reasons of this operation."
+        ::= { hpnicfSystemDiagInfoEntry 6 }
+
+    hpnicfSystemWorkingMode OBJECT IDENTIFIER ::= { hpnicfSystem 14 }
+
+-- hpnicfSystemWorkingModeTable
+    hpnicfSystemWorkingModeTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF HpnicfSystemWorkingModeEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "This table is used to show the system operating mode information.
+                        The supported features and the specifications of the
+                        supported features vary by system operating mode.
+                        The mode will take effect on the entire device."
+        ::= { hpnicfSystemWorkingMode 1 }
+    hpnicfSystemWorkingModeEntry OBJECT-TYPE
+        SYNTAX          HpnicfSystemWorkingModeEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "The entry of hpnicfSystemtemWorkingModeTable."
+        INDEX { hpnicfSystemWorkingModeIndex }
+        ::= { hpnicfSystemWorkingModeTable 1 }
+    HpnicfSystemWorkingModeEntry ::= SEQUENCE {
+        hpnicfSystemWorkingModeIndex             Integer32,
+        hpnicfSystemWorkingModeName              DisplayString,
+        hpnicfSystemWorkingModeDescr       DisplayString
+     }
+    hpnicfSystemWorkingModeIndex OBJECT-TYPE
+        SYNTAX          Integer32 (1..2147483647)
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "The unique index of hpnicfSystemWorkingModeTable.
+                        The value should be a a small-incremental integer.
+                        An index value uniquely identifies a system operating mode."
+        ::= { hpnicfSystemWorkingModeEntry 1 }
+    hpnicfSystemWorkingModeName OBJECT-TYPE
+        SYNTAX          DisplayString (SIZE (1..32))
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The name that uniquely identifies the system operating mode.
+                        The value should not contain blank spaces."
+        ::= { hpnicfSystemWorkingModeEntry 2 }
+    hpnicfSystemWorkingModeDescr OBJECT-TYPE
+        SYNTAX          DisplayString (SIZE (1..128))
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "Description of the system operating mode."
+        ::= { hpnicfSystemWorkingModeEntry 3 }
+
+     hpnicfSystemWorkingModeDefault OBJECT-TYPE
+        SYNTAX          Integer32 (1..2147483647)
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The default system operating mode.
+                        Different device devices might have different
+                        default system operating modes.
+                        The value is from hpnicfSystemWorkingModeIndex."
+        ::= { hpnicfSystemWorkingMode 2 }
+
+    hpnicfSystemWorkingModeCurrent OBJECT-TYPE
+        SYNTAX          Integer32 (1..2147483647)
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The current system operating mode.
+                        The value is from hpnicfSystemWorkingModeIndex."
+        ::= { hpnicfSystemWorkingMode 3 }
+
+    hpnicfSystemWorkingModeNext OBJECT-TYPE
+        SYNTAX          Integer32 (1..2147483647)
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION     "The system operating mode to be used at next startup.
+                        A mode change takes effect after the running
+                        configuration is saved and the device is rebooted.
+                        The value is from hpnicfSystemWorkingModeIndex."
+        ::= { hpnicfSystemWorkingMode 4 }
+
+END

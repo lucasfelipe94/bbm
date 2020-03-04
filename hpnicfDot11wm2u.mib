@@ -1,0 +1,593 @@
+-- =============================================================================
+-- Copyright (c) 2010-2016 Hewlett-Packard Development Company, L.P.
+--
+-- Description:
+--   The file defines a MIB for the wireless multicast to unicast (WM2U) feature,
+--   which is used to improve multicast performance.
+-- Reference:
+-- Version: V1.0
+-- History:
+--   V1.0 created by sunanzhi
+--     Initial version 2015-04-27
+-- =============================================================================
+HPN-ICF-DOT11-WM2U-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    TimeTicks, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    MacAddress, TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    InetAddress, InetAddressType
+        FROM INET-ADDRESS-MIB   -- [RFC4001]
+    hpnicfDot11
+        FROM HPN-ICF-OID-MIB;
+
+hpnicfDot11WM2U MODULE-IDENTITY
+    LAST-UPDATED "201503311551Z"        -- March 31, 2015 at 13:51 GMT
+    ORGANIZATION
+        ""
+    CONTACT-INFO
+        ""
+    DESCRIPTION
+        "This MIB provides information about the WM2U feature."
+    REVISION "201503311551Z"        -- March 31, 2015 at 13:51 GMT
+    DESCRIPTION
+        "The initial revision of this MIB module."
+    ::= {  hpnicfDot11 16 }
+
+--
+-- Textual conventions
+--
+HpnicfDot11WM2UEnableStatus ::= TEXTUAL-CONVENTION
+        STATUS      current
+        DESCRIPTION
+            "The enable status values for objects.
+            Values include enabled and disbaled."
+        SYNTAX      INTEGER { enabled(1), disabled(2) }
+
+HpnicfDot11WM2UAction ::= TEXTUAL-CONVENTION
+        STATUS      current
+        DESCRIPTION
+            "Action to take when the number of clients exceeds the threshold."
+        SYNTAX  INTEGER
+            {
+            drop(1),
+            unicast(2),
+            multicast(3)
+            }
+
+HpnicfDot11WM2UGroupVersion ::= TEXTUAL-CONVENTION
+        STATUS      current
+        DESCRIPTION
+            "Multicast protocol version."
+        SYNTAX  INTEGER
+            {
+            igmpv1orv2(1),
+            igmpv3(2),
+            mldv1(3),
+            mldv2(4)
+            }
+
+HpnicfDot11WM2UGroupMode ::= TEXTUAL-CONVENTION
+        STATUS      current
+        DESCRIPTION
+            "Multicast source filtering mode."
+        SYNTAX  INTEGER
+            {
+            include(1),
+            exclude(2)
+            }
+
+
+--
+-- Node definitions
+--
+hpnicfDot11WM2UConfigGroup OBJECT IDENTIFIER ::= { hpnicfDot11WM2U 1 }
+hpnicfDot11WM2UDataGroup OBJECT IDENTIFIER ::= { hpnicfDot11WM2U 2 }
+
+hpnicfDot11WM2USrvTempStatesTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfDot11WM2USrvTempStatesEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table contains the enable status of WM2U in service templates."
+    ::= { hpnicfDot11WM2UConfigGroup 1 }
+
+hpnicfDot11WM2USrvTempStatesEntry OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2USrvTempStatesEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Each entry contains the enable status of WM2U in a service template."
+    INDEX { hpnicfDot11WM2USrvTempName,  hpnicfDot11WM2USrvTempAddressType}
+    ::= { hpnicfDot11WM2USrvTempStatesTable 1 }
+
+HpnicfDot11WM2USrvTempStatesEntry ::= SEQUENCE {
+        hpnicfDot11WM2USrvTempName                    OCTET STRING,
+        hpnicfDot11WM2USrvTempAddressType                  InetAddressType,
+        hpnicfDot11WM2USrvTempState                   HpnicfDot11WM2UEnableStatus
+     }
+
+hpnicfDot11WM2USrvTempName OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE (1..63))
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Represents the name of the service template."
+    ::= { hpnicfDot11WM2USrvTempStatesEntry 1 }
+
+hpnicfDot11WM2USrvTempAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Represents the address type."
+    ::= { hpnicfDot11WM2USrvTempStatesEntry 2 }
+
+hpnicfDot11WM2USrvTempState OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UEnableStatus
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The enable status of WM2U."
+    ::= { hpnicfDot11WM2USrvTempStatesEntry 3 }
+
+hpnicfDot11WM2UAgingTimeTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfDot11WM2UAgingTimeEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table contains WM2U entry aging information."
+    ::= { hpnicfDot11WM2UConfigGroup 2 }
+
+hpnicfDot11WM2UAgingTimeEntry OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UAgingTimeEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Each entry contains the aging time for an address type."
+    INDEX { hpnicfDot11WM2UAgingAddressType }
+    ::= { hpnicfDot11WM2UAgingTimeTable 1 }
+
+HpnicfDot11WM2UAgingTimeEntry ::= SEQUENCE {
+        hpnicfDot11WM2UAgingAddressType                    InetAddressType,
+        hpnicfDot11WM2UAgingTime                           Unsigned32
+     }
+
+hpnicfDot11WM2UAgingAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Represents the address type."
+    ::= { hpnicfDot11WM2UAgingTimeEntry 1 }
+
+hpnicfDot11WM2UAgingTime OBJECT-TYPE
+    SYNTAX Unsigned32 (60..3600)
+    UNITS   "seconds"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Represents the aging time."
+    ::= { hpnicfDot11WM2UAgingTimeEntry 2 }
+
+hpnicfDot11WM2UClientEntryLmtsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfDot11WM2UClientEntryLmtsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table contains the WM2U entry limit for each client."
+    ::= { hpnicfDot11WM2UConfigGroup 3 }
+
+hpnicfDot11WM2UClientEntryLmtsEntry OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UClientEntryLmtsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Each entry contains the WM2U entry limit for each client of an
+        address type."
+    INDEX { hpnicfDot11WM2UClientEtyAddressType }
+    ::= { hpnicfDot11WM2UClientEntryLmtsTable 1 }
+
+HpnicfDot11WM2UClientEntryLmtsEntry ::= SEQUENCE {
+        hpnicfDot11WM2UClientEtyAddressType                InetAddressType,
+        hpnicfDot11WM2UClientValue                         Unsigned32,
+        hpnicfDot11WM2UClientState                         HpnicfDot11WM2UEnableStatus
+     }
+
+hpnicfDot11WM2UClientEtyAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Represents the address type."
+    ::= { hpnicfDot11WM2UClientEntryLmtsEntry 1 }
+
+hpnicfDot11WM2UClientValue OBJECT-TYPE
+    SYNTAX Unsigned32 (8..1024)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Maximum number of WM2U entries for each client of the address type."
+    ::= { hpnicfDot11WM2UClientEntryLmtsEntry 2 }
+
+hpnicfDot11WM2UClientState OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UEnableStatus
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The enable status of the per-client WM2U entry limit."
+    ::= { hpnicfDot11WM2UClientEntryLmtsEntry 3 }
+
+hpnicfDot11WM2UGlobalEntryLmtsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfDot11WM2UGlobalEntryLmtsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table contains the WM2U table size."
+    ::= { hpnicfDot11WM2UConfigGroup 4 }
+
+hpnicfDot11WM2UGlobalEntryLmtsEntry OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UGlobalEntryLmtsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Each entry contains the WM2U table size for an address type."
+    INDEX { hpnicfDot11WM2UGlobalEtyAddressType }
+    ::= { hpnicfDot11WM2UGlobalEntryLmtsTable 1 }
+
+HpnicfDot11WM2UGlobalEntryLmtsEntry ::= SEQUENCE {
+        hpnicfDot11WM2UGlobalEtyAddressType                InetAddressType,
+        hpnicfDot11WM2UGlobalValue                         Unsigned32,
+        hpnicfDot11WM2UGlobalState                         HpnicfDot11WM2UEnableStatus
+     }
+
+hpnicfDot11WM2UGlobalEtyAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Represents the address type."
+    ::= { hpnicfDot11WM2UGlobalEntryLmtsEntry 1 }
+
+hpnicfDot11WM2UGlobalValue OBJECT-TYPE
+    SYNTAX Unsigned32 (8..8192)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "WM2U table size(The maximum number of entries that the WM2U table
+        can contain)."
+    ::= { hpnicfDot11WM2UGlobalEntryLmtsEntry 2 }
+
+hpnicfDot11WM2UGlobalState OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UEnableStatus
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The enable status of the WM2U table size setting."
+    ::= { hpnicfDot11WM2UGlobalEntryLmtsEntry 3 }
+
+hpnicfDot11WM2UFwdClientLmtsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfDot11WM2UFwdClientLmtsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table contains the limit on the number of clients of each address
+        type in the WM2U table."
+    ::= { hpnicfDot11WM2UConfigGroup 5 }
+
+hpnicfDot11WM2UFwdClientLmtsEntry OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UFwdClientLmtsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Each entry contains the limit on the number of clients of an address
+        type in the WM2U table."
+    INDEX { hpnicfDot11WM2UFwdClientAddressType }
+    ::= { hpnicfDot11WM2UFwdClientLmtsTable 1 }
+
+HpnicfDot11WM2UFwdClientLmtsEntry ::= SEQUENCE {
+        hpnicfDot11WM2UFwdClientAddressType                InetAddressType,
+        hpnicfDot11WM2UFwdClientValue                      Unsigned32,
+        hpnicfDot11WM2UFwdClientAction                     HpnicfDot11WM2UAction,
+        hpnicfDot11WM2UFwdClientState                      HpnicfDot11WM2UEnableStatus
+     }
+
+hpnicfDot11WM2UFwdClientAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Represents the address type."
+    ::= { hpnicfDot11WM2UFwdClientLmtsEntry 1 }
+
+hpnicfDot11WM2UFwdClientValue OBJECT-TYPE
+    SYNTAX Unsigned32 (1..256)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Limit on the number of clients of the address type."
+    ::= { hpnicfDot11WM2UFwdClientLmtsEntry 2 }
+
+hpnicfDot11WM2UFwdClientAction OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UAction
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Action to take when the number of clients exceeds the limit."
+    ::= { hpnicfDot11WM2UFwdClientLmtsEntry 3 }
+
+hpnicfDot11WM2UFwdClientState OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UEnableStatus
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The enable status of the client limit."
+    ::= { hpnicfDot11WM2UFwdClientLmtsEntry 4 }
+
+hpnicfDot11WM2URateLimitsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfDot11WM2URateLimitsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table contains multicast packet rate limit information."
+    ::= { hpnicfDot11WM2UConfigGroup 6 }
+
+hpnicfDot11WM2URateLimitsEntry OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2URateLimitsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Each entry contains the packet rate limit for an address type."
+    INDEX { hpnicfDot11WM2URateLmtsAddressType }
+    ::= { hpnicfDot11WM2URateLimitsTable 1 }
+
+HpnicfDot11WM2URateLimitsEntry ::= SEQUENCE {
+        hpnicfDot11WM2URateLmtsAddressType                 InetAddressType,
+        hpnicfDot11WM2UInterval                            Unsigned32,
+        hpnicfDot11WM2UThreshold                           Unsigned32,
+        hpnicfDot11WM2URateLmtsState                       HpnicfDot11WM2UEnableStatus
+     }
+
+hpnicfDot11WM2URateLmtsAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Represents the address type."
+    ::= { hpnicfDot11WM2URateLimitsEntry 1 }
+
+hpnicfDot11WM2UInterval OBJECT-TYPE
+    SYNTAX Unsigned32 (60..3600)
+    UNITS  "seconds"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Interval for calculating the incoming multicast packet rate,
+         unit for seconds."
+    ::= { hpnicfDot11WM2URateLimitsEntry 2 }
+
+hpnicfDot11WM2UThreshold OBJECT-TYPE
+    SYNTAX Unsigned32 (1..100000)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Threshold on the number of multicast packets received over the
+        specified interval."
+    ::= { hpnicfDot11WM2URateLimitsEntry 3 }
+
+hpnicfDot11WM2URateLmtsState OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UEnableStatus
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The enable status of IGMP packet rate limiting."
+    ::= { hpnicfDot11WM2URateLimitsEntry 4 }
+
+hpnicfDot11WM2UClientsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfDot11WM2UClientsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table contains WM2U client information."
+    ::= { hpnicfDot11WM2UDataGroup 1 }
+
+hpnicfDot11WM2UClientsEntry OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UClientsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Each entry contains information about a client."
+    INDEX { hpnicfDot11WM2UClientMacAddress }
+    ::= { hpnicfDot11WM2UClientsTable 1 }
+
+HpnicfDot11WM2UClientsEntry ::= SEQUENCE {
+        hpnicfDot11WM2UClientMacAddress                    MacAddress,
+        hpnicfDot11WM2UDuration                            TimeTicks,
+        hpnicfDot11WM2UGroupNum4                           Unsigned32,
+        hpnicfDot11WM2UGroupNum6                           Unsigned32
+     }
+
+hpnicfDot11WM2UClientMacAddress OBJECT-TYPE
+    SYNTAX MacAddress
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Client MAC address."
+    ::= { hpnicfDot11WM2UClientsEntry 1 }
+
+hpnicfDot11WM2UDuration OBJECT-TYPE
+    SYNTAX TimeTicks
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The amount of time that has elapsed since the client was discovered."
+    ::= { hpnicfDot11WM2UClientsEntry 2 }
+
+hpnicfDot11WM2UGroupNum4 OBJECT-TYPE
+    SYNTAX Unsigned32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of IGMP multicast groups that the client has joined."
+    ::= { hpnicfDot11WM2UClientsEntry 3 }
+
+hpnicfDot11WM2UGroupNum6 OBJECT-TYPE
+    SYNTAX Unsigned32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of MLD multicast groups that the client has joined."
+    ::= { hpnicfDot11WM2UClientsEntry 4 }
+
+hpnicfDot11WM2UGroupsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfDot11WM2UGroupsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table contains WM2U group information."
+    ::= { hpnicfDot11WM2UDataGroup 2 }
+
+hpnicfDot11WM2UGroupsEntry OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UGroupsEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Each entry contains information about each group."
+    INDEX { hpnicfDot11WM2UGrpMacAddress, hpnicfDot11WM2UGrpAddressType, hpnicfDot11WM2UAddress }
+    ::= { hpnicfDot11WM2UGroupsTable 1 }
+
+HpnicfDot11WM2UGroupsEntry ::= SEQUENCE {
+        hpnicfDot11WM2UGrpMacAddress                       MacAddress,
+        hpnicfDot11WM2UGrpAddressType                      InetAddressType,
+        hpnicfDot11WM2UAddress                             InetAddress,
+        hpnicfDot11WM2UVersion                             HpnicfDot11WM2UGroupVersion,
+        hpnicfDot11WM2UMode                                HpnicfDot11WM2UGroupMode,
+        hpnicfDot11WM2USourceNum                           Unsigned32,
+        hpnicfDot11WM2UGrpDurLastRefTime                   TimeTicks
+     }
+
+hpnicfDot11WM2UGrpMacAddress OBJECT-TYPE
+    SYNTAX MacAddress
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Client MAC address."
+    ::= { hpnicfDot11WM2UGroupsEntry 1 }
+
+hpnicfDot11WM2UGrpAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Represents the address type."
+    ::= { hpnicfDot11WM2UGroupsEntry 2 }
+
+hpnicfDot11WM2UAddress OBJECT-TYPE
+    SYNTAX InetAddress
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Multicast group address."
+    ::= { hpnicfDot11WM2UGroupsEntry 3 }
+
+hpnicfDot11WM2UVersion OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UGroupVersion
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The version of the group."
+    ::= { hpnicfDot11WM2UGroupsEntry 4 }
+
+hpnicfDot11WM2UMode OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2UGroupMode
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The source filtering mode of the group."
+    ::= { hpnicfDot11WM2UGroupsEntry 5 }
+
+hpnicfDot11WM2USourceNum OBJECT-TYPE
+    SYNTAX Unsigned32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of multicast sources."
+    ::= { hpnicfDot11WM2UGroupsEntry 6 }
+
+hpnicfDot11WM2UGrpDurLastRefTime OBJECT-TYPE
+    SYNTAX TimeTicks
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The amount of time that has elapsed since the multicast group
+        entry was created."
+    ::= { hpnicfDot11WM2UGroupsEntry 7 }
+
+hpnicfDot11WM2USourcesTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfDot11WM2USourcesEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table contains WM2U source information."
+    ::= { hpnicfDot11WM2UDataGroup 3 }
+
+hpnicfDot11WM2USourcesEntry OBJECT-TYPE
+    SYNTAX HpnicfDot11WM2USourcesEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Each entry contains information about a multicast source."
+    INDEX { hpnicfDot11WM2USrcMacAddress, hpnicfDot11WM2USrcAddressType, hpnicfDot11WM2UGroupAddress, hpnicfDot11WM2USourceAddress }
+    ::= { hpnicfDot11WM2USourcesTable 1 }
+
+HpnicfDot11WM2USourcesEntry ::= SEQUENCE {
+        hpnicfDot11WM2USrcMacAddress                       MacAddress,
+        hpnicfDot11WM2USrcAddressType                      InetAddressType,
+        hpnicfDot11WM2UGroupAddress                        InetAddress,
+        hpnicfDot11WM2USourceAddress                       InetAddress,
+        hpnicfDot11WM2USrcDurLastRefTime                   TimeTicks
+     }
+
+hpnicfDot11WM2USrcMacAddress OBJECT-TYPE
+    SYNTAX MacAddress
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Client MAC address."
+    ::= { hpnicfDot11WM2USourcesEntry 1 }
+
+hpnicfDot11WM2USrcAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Represents the address type."
+    ::= { hpnicfDot11WM2USourcesEntry 2 }
+
+hpnicfDot11WM2UGroupAddress OBJECT-TYPE
+    SYNTAX InetAddress
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Multicast group address."
+    ::= { hpnicfDot11WM2USourcesEntry 3 }
+
+hpnicfDot11WM2USourceAddress OBJECT-TYPE
+    SYNTAX InetAddress
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "Source address."
+    ::= { hpnicfDot11WM2USourcesEntry 4 }
+
+hpnicfDot11WM2USrcDurLastRefTime OBJECT-TYPE
+    SYNTAX TimeTicks
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The amount of time that has elapsed since the source was added
+        to the multicast group."
+    ::= { hpnicfDot11WM2USourcesEntry 5 }
+
+END
