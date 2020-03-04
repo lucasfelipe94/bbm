@@ -1,0 +1,85 @@
+-- ==========================================================================
+-- Copyright (c) 2010-2016 Hewlett-Packard Development Company, L.P.
+--
+-- Description: The file defines a MIB to provide MACSEC configuration
+-- Reference:
+-- Version: V1.0
+-- History:
+--   V1.0 2015-09-01 created by liubo
+-- ==========================================================================
+HPN-ICF-MACSEC-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE
+        FROM SNMPv2-SMI
+    InterfaceIndex
+        FROM IF-MIB
+    hpnicfCommon
+        FROM HPN-ICF-OID-MIB;
+
+hpnicfMACsec MODULE-IDENTITY
+    LAST-UPDATED "201509011615Z"
+    ORGANIZATION
+        ""
+    CONTACT-INFO
+        ""
+    DESCRIPTION
+        "This MIB provides information for MACSEC configuration.
+        MACSEC presents secure communication method."
+    REVISION "201509011615Z"
+    DESCRIPTION
+        "Initial version."
+    ::= { hpnicfCommon 163 }
+
+hpnicfMACsecCFGObjects OBJECT IDENTIFIER ::= { hpnicfMACsec 1 }
+
+-- ==========================================================================
+-- hpnicfMACsecCFGPortTable OBJECT
+-- ==========================================================================
+hpnicfMACsecCFGPortTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HpnicfMACsecCFGPortEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+    "The MACsec port table."
+::= { hpnicfMACsecCFGObjects 1 }
+
+hpnicfMACsecCFGPortEntry OBJECT-TYPE
+    SYNTAX HpnicfMACsecCFGPortEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+    "The MACsec port entry."
+    INDEX { hpnicfMACsecCFGPortIndex }
+::= { hpnicfMACsecCFGPortTable 1 }
+
+HpnicfMACsecCFGPortEntry ::= SEQUENCE {
+    hpnicfMACsecCFGPortIndex         InterfaceIndex,
+    hpnicfMACsecCFGPortPSKCKNName    OCTET STRING,
+    hpnicfMACsecCFGPortPSKCAKValue   OCTET STRING }
+
+hpnicfMACsecCFGPortIndex OBJECT-TYPE
+    SYNTAX      InterfaceIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+    "An interface index indicates the port number associated with this port."
+::= { hpnicfMACsecCFGPortEntry 1 }
+
+hpnicfMACsecCFGPortPSKCKNName OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(0..128))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+    "The connectivity asociation key name."
+::= { hpnicfMACsecCFGPortEntry 2 }
+
+hpnicfMACsecCFGPortPSKCAKValue OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(0..128))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+    "The connectivity asociation key value."
+::= { hpnicfMACsecCFGPortEntry 3 }
+
+END

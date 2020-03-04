@@ -1,0 +1,344 @@
+-- ============================================================================
+-- Copyright (c) 2010-2016 Hewlett-Packard Development Company, L.P.
+--
+-- Description: There are three standard MIB definitions, "LLDP-MIB", "LLDP-EXT-
+--     DOT1-MIB", "LLDP-EXT-DOT3-MIB", define almost all MIB objects of LLDP.
+--     This document defines more MIB objects privately For LLDP implementation.
+--      1)LLDP default global status is disabled, a management object needed to
+--        enable it.
+--      2)LLDP needs to be compliable with CDP (Non standard IEEE link layer di-
+--        scovery protocol).  A management object needed to enable or disable
+--        compliance.
+--      3)For compliance with CDP, port based control management object is need-
+--        ed.
+--      4)LLDP is able to control the status of a port that connects to a neigh-
+--        bor by matching local neighbor identity information with the informat-
+--        ion in the received chassis ID TLV and port ID TLV.
+-- Reference:
+-- Version: V1.1
+-- History:
+-- V1.0 created by qizhenglin 2009-03-20
+-- V1.1 2015-09-01 Updated by zhaixiaoxiang
+--      Add hpnicflldpPortConfigValidationAction and hpnicflldpPortConfigAgingAction
+--       to hpnicflldpPortConfigTable
+--      Add the hpnicflldpNbIdentityTable, hpnicflldpPortStatusTable, and hpnicflldpN-
+--      otifications tables.
+-- ============================================================================
+HPN-ICF-LLDP-EXT-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32, NOTIFICATION-TYPE
+        FROM SNMPv2-SMI
+    TruthValue, RowStatus
+        FROM SNMPv2-TC
+    hpnicfCommon
+        FROM  HPN-ICF-OID-MIB
+    LldpPortNumber
+        FROM LLDP-MIB;
+
+hpnicflldp MODULE-IDENTITY
+    LAST-UPDATED "201509010000Z"
+    ORGANIZATION
+        ""
+    CONTACT-INFO
+        ""
+    DESCRIPTION
+        "LLDP extended management information."
+    REVISION  "201509010000Z"
+    DESCRIPTION "Update this MIB module."
+    REVISION  "200903210000Z"
+    DESCRIPTION "The initial revision of this MIB module."
+    ::= { hpnicfCommon 100 }
+
+hpnicflldpObjects                    OBJECT IDENTIFIER ::= { hpnicflldp 1 }
+hpnicflldpNotifications              OBJECT IDENTIFIER ::= { hpnicflldp 2 }
+--
+-- LLDP extended MIB Objects
+--
+hpnicflldpConfiguration              OBJECT IDENTIFIER ::= { hpnicflldpObjects 1 }
+
+--
+-- LLDP extended global configuration
+--
+hpnicflldpAdminStatus OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The global administratively desired status of the local LLDP agent."
+    ::= { hpnicflldpConfiguration 1 }
+
+hpnicflldpComplianceCDPStatus OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The global administratively desired status of CDP Compliance."
+    ::= { hpnicflldpConfiguration 2 }
+
+--
+-- hpnicflldpPortConfigTable: LLDP configuration on a per port basis
+--
+
+hpnicflldpPortConfigTable   OBJECT-TYPE
+    SYNTAX      SEQUENCE OF HpnicflldpPortConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The port-based table that controls extended functions."
+    ::= { hpnicflldpConfiguration 3 }
+
+hpnicflldpPortConfigEntry   OBJECT-TYPE
+    SYNTAX      HpnicflldpPortConfigEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "LLDP extended configuration information for a particular port.  This c-
+        onfiguration parameter controls compliance with other non-standard link
+        layer discovery protocol such as CDP."
+    INDEX  { hpnicflldpPortConfigPortNum }
+    ::= { hpnicflldpPortConfigTable 1 }
+
+HpnicflldpPortConfigEntry ::= SEQUENCE {
+    hpnicflldpPortConfigPortNum         LldpPortNumber,
+    hpnicflldpPortConfigCDPComplianceStatus        INTEGER,
+    hpnicflldpPortConfigValidationAction           Integer32,
+    hpnicflldpPortConfigAgingAction                Integer32 }
+
+hpnicflldpPortConfigPortNum   OBJECT-TYPE
+    SYNTAX      LldpPortNumber
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The index value used to identify the port component associated with th-
+         is entry."
+    ::= { hpnicflldpPortConfigEntry 1 }
+
+hpnicflldpPortConfigCDPComplianceStatus  OBJECT-TYPE
+    SYNTAX INTEGER {
+       txAndRx(1),
+       disabled(2)
+    }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "The administratively desired CDP Compliance status of the local LLDP a-
+        gent.  If the associated hpnicflldpPortConfigCDPComplianceStatus object h-
+        as a value of 'txAndRx', then the LLDP agent will receive CDP frames on
+        this port, and will transmit CDP frames only after receive a CDP frames.
+        If the associated lldpPortConfigAdminStatus object has a value of 'disa-
+        bled', LLDP agent will not transmit or receive CDP frames on this port."
+    DEFVAL  { disabled }
+    ::= { hpnicflldpPortConfigEntry 2 }
+
+hpnicflldpPortConfigValidationAction  OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Action that neighbor validation takes on a port.  Bit 1 indicates the
+        block action.  Bit 2 indicates the shutdown action."
+    ::= { hpnicflldpPortConfigEntry 3 }
+
+hpnicflldpPortConfigAgingAction  OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Action that neighbor aging takes on a port.  Bit 1 indicates the block
+         action.  Bit 2 indicates the shutdown action."
+    ::= { hpnicflldpPortConfigEntry 4 }
+
+--
+-- hpnicflldpNbIdentityTable:
+--
+
+hpnicflldpNbIdentityTable   OBJECT-TYPE
+    SYNTAX      SEQUENCE OF HpnicflldpNbIdentityEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains the neighbor identity information of a port."
+    ::= { hpnicflldpConfiguration 4 }
+
+hpnicflldpNbIdentityEntry   OBJECT-TYPE
+    SYNTAX      HpnicflldpNbIdentityEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of objects containing the neighbor identity information of a
+        port."
+    INDEX  { hpnicflldpNbIdentityPortNum }
+    ::= { hpnicflldpNbIdentityTable 1 }
+
+HpnicflldpNbIdentityEntry ::= SEQUENCE {
+    hpnicflldpNbIdentityPortNum          LldpPortNumber,
+    hpnicflldpNbIdentityChassisIDSubtype INTEGER,
+    hpnicflldpNbIdentityChassisID        OCTET STRING,
+    hpnicflldpNbIdentityPortIDSubtype    INTEGER,
+    hpnicflldpNbIdentityPortID           OCTET STRING,
+    hpnicflldpNbIdentityRowStatus        RowStatus }
+
+hpnicflldpNbIdentityPortNum   OBJECT-TYPE
+    SYNTAX      LldpPortNumber
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Port number."
+    ::= { hpnicflldpNbIdentityEntry 1 }
+
+hpnicflldpNbIdentityChassisIDSubtype  OBJECT-TYPE
+    SYNTAX INTEGER {
+        default(0),
+        chassisComponent(1),
+        interfaceAlias(2),
+        portComponent(3),
+        macAddress(4),
+        networkAddress(5),
+        interfaceName(6),
+        local(7)
+    }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Chassis ID subtype.  The value range is 0 to 7, and the default value
+        is 0.  The values 1 to 7 represents the chassis component, interface al-
+        ias, port component, MAC address, network address, interface name, and
+        locally assigned subtypes, respectively."
+    ::= { hpnicflldpNbIdentityEntry 2 }
+
+hpnicflldpNbIdentityChassisID  OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Chassis ID, a case-insensitive string of 1 to 255 characters.
+        By default, the string is empty.  If the value of
+        hpnicflldpNbIdentityChassisIDSubtype is 4, the chassis ID must be
+        a MAC address in H-H-H format."
+    ::= { hpnicflldpNbIdentityEntry 3 }
+
+hpnicflldpNbIdentityPortIDSubtype  OBJECT-TYPE
+    SYNTAX INTEGER {
+        default(0),
+        interfaceAlias(1),
+        portComponent(2),
+        macAddress(3),
+        networkAddress(4),
+        interfaceName(5),
+        agentCircuitId(6),
+        local(7)
+    }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Port ID subtype.  The value range is 0 to 7, and the default
+         value is 0.  The values 1 to 7 represents the interface alias, port co-
+         mponent, MAC address, network address, interface name, agent circuit
+         ID, and locally assigned subtypes, respectively."
+    ::= { hpnicflldpNbIdentityEntry 4 }
+
+hpnicflldpNbIdentityPortID  OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Port ID, a case-insensitive string of 1 to 255 characters.
+        By default, the string is empty.  If the value of
+        hpnicflldpNbIdentityPortIDSubtype is 3, the port ID must be
+        a MAC address in H-H-H format."
+    ::= { hpnicflldpNbIdentityEntry 5 }
+
+hpnicflldpNbIdentityRowStatus   OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "Row status: CreateAndGo, Active, or Destroy."
+    ::= { hpnicflldpNbIdentityEntry 6 }
+
+---
+--- hpnicflldpPortStatusTable
+---
+
+hpnicflldpPortStatusTable   OBJECT-TYPE
+    SYNTAX      SEQUENCE OF HpnicflldpPortStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains the state information of a port."
+    ::= { hpnicflldpConfiguration 5 }
+
+hpnicflldpPortStatusEntry   OBJECT-TYPE
+    SYNTAX      HpnicflldpPortStatusEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of objects containing the state information of a port."
+    INDEX  { hpnicflldpPortStatusPortNum }
+    ::= { hpnicflldpPortStatusTable 1 }
+
+HpnicflldpPortStatusEntry ::= SEQUENCE {
+    hpnicflldpPortStatusPortNum      LldpPortNumber,
+    hpnicflldpPortValidationStatus   Integer32,
+    hpnicflldpPortAgingStatus        Integer32
+    }
+
+hpnicflldpPortStatusPortNum   OBJECT-TYPE
+    SYNTAX      LldpPortNumber
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Port number."
+    ::= { hpnicflldpPortStatusEntry 1 }
+
+hpnicflldpPortValidationStatus  OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Neighbor validation protection status of the port.  The default value
+         is 0."
+    ::= { hpnicflldpPortStatusEntry 2 }
+
+hpnicflldpPortAgingStatus  OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Neighbor aging protection status of the port.  The default value is
+         0."
+    ::= { hpnicflldpPortStatusEntry 3 }
+
+--
+-- ***********************************************************
+--
+--        L L D P   M I B   N O T I F I C A T I O N S
+--
+-- ***********************************************************
+--
+
+hpnicflldpPortStatusTrap OBJECT IDENTIFIER ::= { hpnicflldpNotifications 0 }
+
+hpnicflldpValidationStatusChange NOTIFICATION-TYPE
+    OBJECTS {
+        hpnicflldpPortStatusPortNum,
+        hpnicflldpPortValidationStatus
+    }
+    STATUS        current
+    DESCRIPTION
+        "This notification will be sent when the neighbor validation
+         protection status of a port is changed."
+    ::= { hpnicflldpPortStatusTrap 1 }
+
+hpnicflldpAgingStatusChange NOTIFICATION-TYPE
+    OBJECTS {
+        hpnicflldpPortStatusPortNum,
+        hpnicflldpPortAgingStatus
+    }
+    STATUS        current
+    DESCRIPTION
+        "This notification will be sent when the neighbor aging protection
+          status of a port is changed."
+    ::= { hpnicflldpPortStatusTrap 2 }
+END
