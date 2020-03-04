@@ -2,10 +2,7 @@ SNMPv2-SMI DEFINITIONS ::= BEGIN
 
 
 -- the path to the root
--- ccitt          OBJECT IDENTIFIER ::= { 0 }
-null           OBJECT IDENTIFIER ::= { ccitt 0 }  --  "ccitt" = 0
 
--- iso            OBJECT IDENTIFIER ::= { 1 }
 org            OBJECT IDENTIFIER ::= { iso 3 }  --  "iso" = 1
 dod            OBJECT IDENTIFIER ::= { org 6 }
 internet       OBJECT IDENTIFIER ::= { dod 1 }
@@ -54,11 +51,5 @@ ExtUTCTime ::= OCTET STRING(SIZE(11 | 13))
     -- two or four digit format.
 
 -- definitions for information modules
-
-zeroDotZero    OBJECT-IDENTITY
-    STATUS     current
-    DESCRIPTION
-            "A value used for null identifiers."
-    ::= { 0 0 }
 
 END
