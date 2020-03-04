@@ -2765,6 +2765,10 @@ pimMIBComplianceAsm MODULE-COMPLIANCE
       DESCRIPTION
           "This group is optional."
 
+      GROUP   pimNetMgmtNotificationGroup
+      DESCRIPTION
+          "This group is optional."
+
       GROUP   pimDiagnosticsGroup
       DESCRIPTION
           "This group is optional."
@@ -2800,6 +2804,10 @@ pimMIBComplianceBidir MODULE-COMPLIANCE
       DESCRIPTION
           "This group is optional."
 
+      GROUP   pimNetMgmtNotificationGroup
+      DESCRIPTION
+          "This group is optional."
+
       GROUP   pimDiagnosticsGroup
       DESCRIPTION
           "This group is optional."
@@ -2832,6 +2840,10 @@ pimMIBComplianceSsm MODULE-COMPLIANCE
           "This group is optional."
 
       GROUP   pimNetMgmtNotificationObjects
+      DESCRIPTION
+          "This group is optional."
+
+      GROUP   pimNetMgmtNotificationGroup
       DESCRIPTION
           "This group is optional."
 
@@ -2871,7 +2883,11 @@ pimMIBComplianceDm MODULE-COMPLIANCE
       GROUP   pimNetMgmtNotificationObjects
       DESCRIPTION
           "This group is optional."
-          
+
+      GROUP   pimNetMgmtNotificationGroup
+      DESCRIPTION
+          "This group is optional."
+
       GROUP   pimDiagnosticsGroup
       DESCRIPTION
           "This group is optional."
